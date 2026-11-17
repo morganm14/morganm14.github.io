@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrueFit</title>
+<meta name="description" content="TrueFit: a phone-friendly job search that shows business seniors a short list of entry-level jobs that really fit.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%230b2a5b'/%3E%3Cpath d='M24 9c-6.6 0-12 5.2-12 11.7C12 29.4 24 40 24 40s12-10.6 12-19.3C36 14.2 30.6 9 24 9z' fill='%23fff'/%3E%3Cpath d='M18.5 21l4 4 7.5-8' fill='none' stroke='%2316a34a' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --navy: #0b2a5b;
+    --navy-2: #133a78;
+    --navy-soft: #e8eef8;
+    --green: #15803d;
+    --green-bright: #16a34a;
+    --green-soft: #e7f6ec;
+    --ink: #0f172a;
+    --muted: #475569;
+    --line: #d7deea;
+    --bg: #ffffff;
+    --bg-alt: #f5f7fb;
+    --warn: #9a3412;
+    --warn-soft: #fff1e6;
+    --radius: 14px;
+    --shadow: 0 10px 30px rgba(11, 42, 91, .10);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px; line-height: 1.6;
+  }
+  a { color: var(--navy-2); }
+  :focus-visible { outline: 3px solid var(--green-bright); outline-offset: 3px; border-radius: 6px; }
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--navy); color: #fff; padding: 10px 14px; border-radius: 8px; z-index: 100; }
+  .skip:focus { left: 16px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+  section { padding: 72px 0; }
+  section.alt { background: var(--bg-alt); }
+  h1, h2, h3 { line-height: 1.2; color: var(--navy); margin: 0 0 12px; }
+  h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); letter-spacing: -.02em; }
+  h2 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); letter-spacing: -.01em; }
+  h3 { font-size: 1.15rem; }
+  .eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+  .lead { font-size: 1.15rem; color: var(--muted); max-width: 680px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer;
+    font: inherit; font-weight: 700; padding: 13px 22px; border-radius: 999px; text-decoration: none;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: #166534; }
+  .btn-ghost { background: transparent; color: var(--navy); border: 2px solid var(--navy); }
+  .btn-ghost:hover { background: var(--navy-soft); }
+
+  /* Header */
+  header.site { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); font-weight: 800; font-size: 1.3rem; letter-spacing: -.01em; }
+  .brand span b { color: var(--green); }
+  .nav ul { list-style: none; display: flex; gap: 4px; margin: 0; padding: 0; }
+  .nav ul a { text-decoration: none; color: var(--ink); font-weight: 600; font-size: .95rem; padding: 8px 12px; border-radius: 8px; }
+  .nav ul a:hover { background: var(--navy-soft); color: var(--navy); }
+  .menu-btn { display: none; background: none; border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; font: inherit; font-weight: 700; color: var(--navy); cursor: pointer; }
+  @media (max-width: 820px) {
+    .menu-btn { display: block; }
+    .nav ul { display: none; position: absolute; top: 66px; left: 0; right: 0; flex-direction: column; background: #fff; border-bottom: 1px solid var(--line); padding: 8px 16px 16px; }
+    .nav ul.open { display: flex; }
+    .nav ul a { display: block; padding: 12px; }
+  }
+
+  /* Hero */
+  .hero { padding: 64px 0 80px; background: linear-gradient(180deg, var(--navy-soft) 0%, #fff 100%); }
+  .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+  .hero h1 .accent { color: var(--green); }
+  .hero .cta { display: flex; gap: 12px; flex-wrap: wrap; margin: 28px 0 20px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; margin: 0; }
+  .pills li { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: .88rem; font-weight: 600; color: var(--navy); }
+  .before-after { display: flex; gap: 14px; align-items: stretch; margin-top: 8px; }
+  .ba { flex: 1; border-radius: var(--radius); padding: 22px; text-align: center; }
+  .ba.before { background: #fff; border: 2px dashed #c3cbd9; color: var(--muted); }
+  .ba.after { background: var(--navy); color: #fff; box-shadow: var(--shadow); }
+  .ba .num { font-size: 2.4rem; font-weight: 800; line-height: 1.1; }
+  .ba.after .num { color: #86efac; }
+  .ba .lbl { font-size: .92rem; }
+  .arrow { align-self: center; font-size: 1.6rem; color: var(--green); font-weight: 800; }
+  .goal-note { font-size: .85rem; color: var(--muted); margin-top: 10px; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  @media (max-width: 860px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+  .card .icon { width: 44px; height: 44px; border-radius: 12px; background: var(--navy-soft); display: grid; place-items: center; margin-bottom: 12px; }
+  .card p { margin: 0; color: var(--muted); }
+
+  /* Evidence stats */
+  .stat { text-align: left; cursor: pointer; font: inherit; width: 100%; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; transition: box-shadow .2s, border-color .2s; }
+  .stat:hover { border-color: var(--navy-2); box-shadow: var(--shadow); }
+  .stat[aria-expanded="true"] { border-color: var(--green); box-shadow: var(--shadow); }
+  .stat .big { font-size: 2.5rem; font-weight: 800; color: var(--navy); line-height: 1; }
+  .stat .what { display: block; margin-top: 8px; color: var(--ink); font-weight: 600; }
+  .stat .more { display: inline-block; margin-top: 12px; font-size: .88rem; font-weight: 700; color: var(--green); }
+  .stat .src { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: .9rem; color: var(--muted); }
+  .stat[aria-expanded="true"] .src { display: block; }
+  .stat .src a { font-weight: 600; }
+  .caveat { display: inline-block; margin-top: 6px; background: var(--warn-soft); color: var(--warn); font-size: .82rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+
+  /* Demo */
+  .demo { display: grid; grid-template-columns: 1fr 340px; gap: 48px; align-items: start; }
+  @media (max-width: 900px) { .demo { grid-template-columns: 1fr; } .phone-col { order: -1; } }
+  .steps { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 10px; }
+  .step-btn {
+    width: 100%; text-align: left; display: flex; gap: 14px; align-items: flex-start;
+    background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+    font: inherit; color: var(--ink); cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .step-btn:hover { border-color: var(--navy-2); }
+  .step-btn[aria-selected="true"] { border-color: var(--navy); background: var(--navy-soft); }
+  .step-num { flex: 0 0 32px; height: 32px; border-radius: 50%; background: var(--navy-soft); color: var(--navy); display: grid; place-items: center; font-weight: 800; }
+  .step-btn[aria-selected="true"] .step-num { background: var(--navy); color: #fff; }
+  .step-btn strong { display: block; color: var(--navy); }
+  .step-btn small { color: var(--muted); font-size: .9rem; }
+
+  .phone-col { position: sticky; top: 90px; }
+  .phone { width: 100%; max-width: 340px; margin: 0 auto; background: var(--navy); border-radius: 40px; padding: 12px; box-shadow: 0 24px 50px rgba(11,42,91,.28); }
+  .screen { background: #fff; border-radius: 30px; height: 600px; overflow: hidden; display: flex; flex-direction: column; }
+  .notch { height: 26px; display: flex; justify-content: center; align-items: center; }
+  .notch::after { content: ""; width: 90px; height: 6px; border-radius: 6px; background: #d4d9e3; }
+  .app-bar { display: flex; align-items: center; gap: 8px; padding: 6px 18px 10px; border-bottom: 1px solid var(--line); }
+  .app-bar .t { font-weight: 800; color: var(--navy); }
+  .app-bar .s { margin-left: auto; font-size: .75rem; color: var(--muted); font-weight: 600; }
+  .progress { height: 4px; background: var(--navy-soft); }
+  .progress i { display: block; height: 100%; background: var(--green-bright); transition: width .3s; }
+  .app-body { flex: 1; overflow-y: auto; padding: 16px 18px; font-size: .9rem; }
+  .app-body h4 { margin: 0 0 4px; color: var(--navy); font-size: 1.05rem; }
+  .app-body .hint { color: var(--muted); font-size: .8rem; margin: 0 0 12px; }
+  .app-body .grp { font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 12px 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font: inherit; font-size: .8rem; border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .chip[aria-pressed="true"]::before { content: "✓ "; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-weight: 700; color: var(--navy); font-size: .82rem; margin-bottom: 4px; }
+  .field select, .field input[type=range] { width: 100%; font: inherit; font-size: .88rem; }
+  .field select { padding: 8px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; }
+  .lock { display: flex; justify-content: space-between; align-items: center; background: var(--bg-alt); border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; font-size: .85rem; }
+  .lock b { color: var(--green); }
+  .app-foot { padding: 12px 18px 18px; border-top: 1px solid var(--line); }
+  .app-foot .btn { width: 100%; justify-content: center; padding: 11px; font-size: .95rem; }
+  .job { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; background: #fff; width: 100%; text-align: left; font: inherit; font-size: .85rem; }
+  .job:hover { border-color: var(--navy-2); }
+  .job .jt { font-weight: 800; color: var(--navy); display: block; }
+  .job .jc { color: var(--muted); font-size: .8rem; display: block; }
+  .job .why { display: block; margin-top: 6px; background: var(--green-soft); color: #14532d; border-radius: 8px; padding: 4px 8px; font-size: .78rem; }
+  .tagrow { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .tag { font-size: .7rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--navy-soft); color: var(--navy); }
+  .tag.warn { background: var(--warn-soft); color: var(--warn); }
+  .detail dl { margin: 10px 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: .84rem; }
+  .detail dt { font-weight: 700; color: var(--navy); }
+  .detail dd { margin: 0; }
+  .match-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: .84rem; }
+  .match-list li::before { content: "✓ "; color: var(--green-bright); font-weight: 800; }
+  .preview-note { text-align: center; font-size: .82rem; color: var(--muted); margin-top: 12px; }
+
+  /* Cities */
+  .city-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 18px; }
+  .city-tab { font: inherit; font-weight: 700; border: 2px solid var(--line); background: #fff; color: var(--navy); border-radius: 999px; padding: 8px 18px; cursor: pointer; }
+  .city-tab[aria-selected="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .city-panel { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+  .city-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .count { font-weight: 800; color: var(--navy); }
+  .toggle { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; font-size: .95rem; }
+  .toggle input { width: 20px; height: 20px; accent-color: var(--green); }
+  .listing { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .listing:first-of-type { border-top: 0; }
+  .listing .lt { font-weight: 700; color: var(--navy); }
+  .listing .lc { color: var(--muted); font-size: .92rem; }
+  .listing a { font-size: .9rem; font-weight: 700; white-space: nowrap; align-self: center; }
+  .listing.hidden { display: none; }
+  .filtered-msg { margin-top: 10px; font-size: .92rem; color: var(--warn); font-weight: 600; }
+  @media (max-width: 600px) { .listing { grid-template-columns: 1fr; } }
+
+  /* Does / doesn't */
+  .yes li, .no li { margin-bottom: 8px; }
+  .yes, .no { list-style: none; padding: 0; margin: 0; }
+  .yes li::before { content: "✓"; color: var(--green); font-weight: 800; margin-right: 10px; }
+  .no li::before { content: "✕"; color: #b91c1c; font-weight: 800; margin-right: 10px; }
+
+  /* FAQ */
+  details { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 0 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 700; color: var(--navy); padding: 16px 0; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-size: 1.3rem; line-height: 1; color: var(--green); }
+  details[open] summary::after { content: "–"; }
+  details p { margin: 0 0 16px; color: var(--muted); }
+
+  /* CTA + footer */
+  .final { background: var(--navy); color: #fff; text-align: center; }
+  .final h2 { color: #fff; }
+  .final p { color: #cbd5e1; max-width: 620px; margin: 0 auto 26px; }
+  footer { background: #071d40; color: #94a3b8; padding: 28px 0; font-size: .9rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+  footer .brand { color: #fff; font-size: 1.1rem; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="TrueFit home">
+      <svg width="38" height="38" viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="12" fill="#0b2a5b"/>
+        <path d="M24 9c-6.6 0-12 5.2-12 11.7C12 29.4 24 40 24 40s12-10.6 12-19.3C36 14.2 30.6 9 24 9z" fill="#fff"/>
+        <path d="M18.5 21l4 4 7.5-8" fill="none" stroke="#16a34a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>True<b>Fit</b></span>
+    </a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <nav aria-label="Main">
+      <ul id="nav-links">
+        <li><a href="#problem">Problem</a></li>
+        <li><a href="#evidence">Evidence</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#cities">Cities</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">For business seniors</p>
+        <h1>Your city. Your fit. <span class="accent">An easier job search.</span></h1>
+        <p class="lead">Tell TrueFit where you want to live and what you want to do. Get a short list of real entry-level business jobs that fit you, not hundreds of random listings you're not interested in or qualified for.</p>
+        <div class="cta">
+          <a class="btn btn-green" href="#how">Try the walkthrough →</a>
+          <a class="btn btn-ghost" href="#cities">Explore the cities</a>
+        </div>
+        <ul class="pills" aria-label="Cities covered">
+          <li>Cincinnati</li><li>Chicago</li><li>Charlotte</li><li>Detroit</li><li>Charleston</li>
+        </ul>
+      </div>
+      <div>
+        <div class="before-after" role="group" aria-label="The goal: from hundreds of listings to a short list">
+          <div class="ba before">
+            <div class="num">150–300</div>
+            <div class="lbl">listings to sort through today</div>
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="ba after">
+            <div class="num">20–25</div>
+            <div class="lbl">jobs that really fit, best match first</div>
+          </div>
+        </div>
+        <p class="goal-note">These are TrueFit's target numbers. Senior survey results will test them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section id="problem">
+    <div class="wrap">
+      <p class="eyebrow">The problem</p>
+      <h2>Too many listings. Not enough real fits.</h2>
+      <p class="lead">A senior business major looking for a full-time, entry-level job searches LinkedIn, Handshake, Indeed and Glassdoor one by one, typing the same filters into each. It still isn't enough.</p>
+      <div class="grid-3" style="margin-top:28px">
+        <div class="card">
+          <div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="2" stroke-linecap="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg></div>
+          <h3>Filters are too coarse</h3>
+          <p>Even with every filter set, there are far too many results to sort through.</p>
+        </div>
+        <div class="card">
+          <div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5M12 16h.01"/></svg></div>
+          <h3>"Entry level" often isn't</h3>
+          <p>Jobs labeled entry level often ask for years of experience a new graduate doesn't have.</p>
+        </div>
+        <div class="card">
+          <div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="4" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+          <h3>One title at a time</h3>
+          <p>There's no way to search analyst, finance and research together, or say what you actually want to do.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVIDENCE -->
+  <section id="evidence" class="alt">
+    <div class="wrap">
+      <p class="eyebrow">The evidence</p>
+      <h2>The research backs it up</h2>
+      <p class="lead">Tap any card to see its source.</p>
+      <div class="grid-3" style="margin-top:28px">
+        <button class="stat" aria-expanded="false">
+          <span class="big">27.3%</span>
+          <span class="what">of "entry-level" job postings ask for at least 1 year of experience</span>
+          <span class="more">Show source</span>
+          <span class="src">Hirebase, "The Experience Inflation Index," Aug 2026. 11,920 postings; 6.5% asked for 3+ years.<br><span class="caveat">Hirebase sells job data</span></span>
+        </button>
+        <button class="stat" aria-expanded="false">
+          <span class="big">46% / 49%</span>
+          <span class="what">of entry-level finance / marketing postings that list experience ask for 3+ years</span>
+          <span class="more">Show source</span>
+          <span class="src">SeekerScore, July 2026 (97 finance and 70 marketing postings that stated a requirement).<br><span class="caveat">Small samples. Treat as a direction, not a precise number.</span></span>
+        </button>
+        <button class="stat" aria-expanded="false">
+          <span class="big">0 yrs</span>
+          <span class="what">of prior experience typically needed for financial analysts, accountants and market research analysts</span>
+          <span class="more">Show source</span>
+          <span class="src">U.S. Bureau of Labor Statistics, Career Outlook, Jan 2025. Postings ask for more than these jobs usually need.</span>
+        </button>
+        <button class="stat" aria-expanded="false">
+          <span class="big">Top issue</span>
+          <span class="what">Irrelevant results and poor filters on Glassdoor, Indeed, Monster and ZipRecruiter</span>
+          <span class="more">Show source</span>
+          <span class="src">MeasuringU, Sept 2019, 213 participants.</span>
+        </button>
+        <button class="stat" aria-expanded="false">
+          <span class="big">71.6%</span>
+          <span class="what">call online job search technology frustrating. Only 7.9% find it intuitive.</span>
+          <span class="more">Show source</span>
+          <span class="src">Training magazine citing a randrr survey, July 2016.<br><span class="caveat">Sample size not given</span></span>
+        </button>
+        <button class="stat" aria-expanded="false">
+          <span class="big">+26%</span>
+          <span class="what">more applications per role on Handshake, while postings fell more than 16%</span>
+          <span class="more">Show source</span>
+          <span class="src">Fortune, Nov 2025, citing Handshake data from Aug 2024 to Aug 2025.</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS / INTERACTIVE DEMO -->
+  <section id="how">
+    <div class="wrap demo">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2>Five quick screens, one short list</h2>
+        <p class="lead">Pick a step, or tap through the phone yourself. Use the buttons to choose options just like in the app.</p>
+        <ol class="steps" role="tablist" aria-label="App screens">
+          <li><button class="step-btn" role="tab" aria-selected="true" data-step="0" aria-controls="app-screen"><span class="step-num">1</span><span><strong>Job titles</strong><small>Pick as many business job titles as you want, across finance, marketing, operations, sales and events.</small></span></button></li>
+          <li><button class="step-btn" role="tab" aria-selected="false" data-step="1" aria-controls="app-screen"><span class="step-num">2</span><span><strong>Must-haves</strong><small>City, in person, full time, minimum salary and max experience required (0–1 year).</small></span></button></li>
+          <li><button class="step-btn" role="tab" aria-selected="false" data-step="2" aria-controls="app-screen"><span class="step-num">3</span><span><strong>What you want</strong><small>5 quick questions: kind of work, company size, industry, culture and benefits.</small></span></button></li>
+          <li><button class="step-btn" role="tab" aria-selected="false" data-step="3" aria-controls="app-screen"><span class="step-num">4</span><span><strong>Results</strong><small>Up to 25 jobs, best fit first, each with a short "why it fits" line.</small></span></button></li>
+          <li><button class="step-btn" role="tab" aria-selected="false" data-step="4" aria-controls="app-screen"><span class="step-num">5</span><span><strong>Job detail</strong><small>See the full details and which of your picks it matches, then apply on the original site.</small></span></button></li>
+        </ol>
+      </div>
+      <div class="phone-col">
+        <div class="phone">
+          <div class="screen" id="app-screen" role="tabpanel" aria-live="polite">
+            <div class="notch" aria-hidden="true"></div>
+            <div class="app-bar">
+              <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="#0b2a5b"/><path d="M24 9c-6.6 0-12 5.2-12 11.7C12 29.4 24 40 24 40s12-10.6 12-19.3C36 14.2 30.6 9 24 9z" fill="#fff"/><path d="M18.5 21l4 4 7.5-8" fill="none" stroke="#16a34a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="t">TrueFit</span>
+              <span class="s" id="step-label">Step 1 of 5</span>
+            </div>
+            <div class="progress" aria-hidden="true"><i id="progress" style="width:20%"></i></div>
+            <div class="app-body" id="app-body"></div>
+            <div class="app-foot" id="app-foot"></div>
+          </div>
+        </div>
+        <p class="preview-note">Interactive preview. Jobs shown are real listings from TrueFit's Cincinnati data.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CITIES -->
+  <section id="cities" class="alt">
+    <div class="wrap">
+      <p class="eyebrow">Where it works</p>
+      <h2>Five cities, 91 hand-picked listings</h2>
+      <p class="lead">Every listing was collected by hand from LinkedIn and TeamWork Online and tagged by salary, experience, kind of work, company size, industry, culture and benefits. Pick a city to see a sample.</p>
+      <div class="city-tabs" role="tablist" aria-label="Cities" id="city-tabs"></div>
+      <div class="city-panel" role="tabpanel" id="city-panel" aria-live="polite">
+        <div class="city-head">
+          <span class="count" id="city-count"></span>
+          <label class="toggle"><input type="checkbox" id="exp-filter"> Hide jobs that ask for more than 1 year</label>
+        </div>
+        <div id="city-list"></div>
+        <p class="filtered-msg" id="filtered-msg" hidden></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOES / DOESN'T -->
+  <section id="scope">
+    <div class="wrap">
+      <p class="eyebrow">What to expect</p>
+      <h2>Focused on one thing: finding your fit</h2>
+      <div class="grid-2" style="margin-top:28px">
+        <div class="card">
+          <h3>TrueFit does</h3>
+          <ul class="yes">
+            <li>Search several job titles at once</li>
+            <li>Filter by city, in person, full time, salary and experience</li>
+            <li>Match jobs to the kind of work, company and culture you want</li>
+            <li>Explain why each job fits you</li>
+            <li>Link you straight to the original posting to apply</li>
+            <li>Work on your phone</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>TrueFit doesn't</h3>
+          <ul class="no">
+            <li>Apply to jobs for you</li>
+            <li>Write or fix your resume or cover letter</li>
+            <li>Need an account or login</li>
+            <li>Save a list of jobs</li>
+            <li>Do interview prep or networking</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="alt">
+    <div class="wrap" style="max-width:820px">
+      <p class="eyebrow">Questions</p>
+      <h2>Good to know</h2>
+      <div style="margin-top:24px">
+        <details>
+          <summary>Who is TrueFit for?</summary>
+          <p>Senior business majors looking for a full-time, in-person, entry-level job in Cincinnati, Chicago, Charlotte, Detroit or Charleston. It's built for people who are open to more than one job title.</p>
+        </details>
+        <details>
+          <summary>Where do the jobs come from?</summary>
+          <p>Real listings collected by hand from LinkedIn and TeamWork Online: 91 so far, about 18 per city, including event-focused jobs. Job sites don't let outside apps pull listings automatically, so each one was gathered and tagged by hand.</p>
+        </details>
+        <details>
+          <summary>How does it filter out fake "entry-level" jobs?</summary>
+          <p>You set the most experience you're ready for (0–1 year), and TrueFit leaves out jobs that ask for more. Some postings don't list experience at all, so they're marked "not stated" and you can decide.</p>
+        </details>
+        <details>
+          <summary>What job titles can I search?</summary>
+          <p>Finance &amp; analysis (financial, business/data, research and credit analyst), marketing (coordinator/associate, digital), operations (operations and supply chain analyst), sales (business development, account representative) and events (event coordinator, events marketing, brand activation, corporate travel and fundraising/special events).</p>
+        </details>
+        <details>
+          <summary>Do I need an account?</summary>
+          <p>No. There are no logins or accounts. Open it, answer the questions and see your matches.</p>
+        </details>
+        <details>
+          <summary>How do I apply?</summary>
+          <p>Tap a job, then tap <strong>Apply on original site</strong>. That opens the posting on LinkedIn or TeamWork Online, and you apply there.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap">
+      <h2>Start with where you want to live.</h2>
+      <p>Pick your city, tell TrueFit what you want to do and see the short list of jobs that fit you.</p>
+      <a class="btn btn-green" href="#how">Find my jobs →</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="brand">True<b style="color:#4ade80">Fit</b></span>
+    <span>A student project at Xavier University. TrueFit is in development, and this page shows the planned app.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  /* ---------- mobile menu ---------- */
+  const menuBtn = document.querySelector('.menu-btn');
+  const navLinks = document.getElementById('nav-links');
+  menuBtn.addEventListener('click', () => {
+    const open = navLinks.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open);
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false');
+  }));
+
+  /* ---------- evidence cards ---------- */
+  document.querySelectorAll('.stat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', !open);
+      btn.querySelector('.more').textContent = open ? 'Show source' : 'Hide source';
+    });
+  });
+
+  /* ---------- phone walkthrough ---------- */
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const titleGroups = {
+    'Finance & analysis': ['Financial analyst', 'Business/data analyst', 'Research analyst', 'Credit analyst'],
+    'Marketing': ['Marketing coordinator/associate', 'Digital marketing'],
+    'Operations': ['Operations analyst', 'Supply chain analyst'],
+    'Sales': ['Sales/business development', 'Account representative'],
+    'Events': ['Event coordinator/associate', 'Events marketing', 'Brand activation/experiential', 'Corporate travel/incentive trips', 'Fundraising/special events']
+  };
+  const questions = {
+    'Kind of work': ['Numbers/analysis', 'People/clients', 'Creative/marketing', 'Research', 'Operations', 'Events/experiences'],
+    'Company size': ['Small (under 100)', 'Mid (100–1,000)', 'Large (1,000+)', 'No preference'],
+    'Industry': ['Banking/finance', 'Healthcare', 'Consumer goods', 'Tech', 'Consulting', 'Nonprofit', 'Sports', 'No preference'],
+    'Culture': ['Collaborative', 'Independent', 'Fast-paced', 'Structured', 'No preference'],
+    'Benefits': ['Health insurance', '401(k) match', 'Tuition help', 'Paid time off', 'Training program']
+  };
+  const state = {
+    titles: new Set(['Financial analyst', 'Business/data analyst']),
+    city: 'Cincinnati, OH', salary: 'Any', exp: 1,
+    want: new Set(['Numbers/analysis', 'Large (1,000+)', 'Healthcare', 'Collaborative', 'Paid time off']),
+    job: 0
+  };
+  // Real Cincinnati listings from listings.csv
+  const demoJobs = [
+    { t: 'Entry-Level Financial Analyst - Revenue', co: 'Medpace', s: 'Not stated', e: '0–1 years', src: 'LinkedIn',
+      why: 'Numbers/analysis work at a large healthcare company, and it asks for 0–1 years.',
+      match: ['Financial analyst', 'Cincinnati, full time', '0–1 years of experience', 'Numbers/analysis', 'Large company', 'Healthcare', 'Paid time off'],
+      desc: 'Office-based with occasional work from home after training. On-site mentors.',
+      u: 'https://www.linkedin.com/jobs/view/entry-level-financial-analyst-revenue-at-medpace-4456062230' },
+    { t: 'Junior Business Intelligence Analyst', co: 'Medpace', s: 'Not stated', e: '0–3 years', src: 'LinkedIn',
+      why: 'Analysis work on a collaborative team at a large healthcare company.',
+      match: ['Business/data analyst', 'Cincinnati, full time', 'Numbers/analysis', 'Large company', 'Healthcare', 'Collaborative', 'Paid time off'],
+      desc: 'Collaborative, fast-paced, entrepreneurial. Office-based with occasional work from home.',
+      u: 'https://www.linkedin.com/jobs/view/junior-business-intelligence-analyst-at-medpace-4478174709' },
+    { t: 'Associate Operations Analyst', co: 'Global Payments Inc.', s: 'Not stated', e: 'Not stated', src: 'LinkedIn', warn: true,
+      why: 'Analyst role at a large finance company. Experience isn\'t stated, so check the posting.',
+      match: ['Business/data analyst', 'Cincinnati, full time', 'Large company'],
+      desc: 'Experience requirement not stated (2 years listed as a bonus).',
+      u: 'https://www.linkedin.com/jobs/view/associate-operations-analyst-at-global-payments-inc-4487053427' }
+  ];
+
+  const body = document.getElementById('app-body');
+  const foot = document.getElementById('app-foot');
+  const stepLabel = document.getElementById('step-label');
+  const progress = document.getElementById('progress');
+  const stepBtns = document.querySelectorAll('.step-btn');
+  let current = 0;
+
+  function chips(list, set) {
+    return '<div class="chips">' + list.map(x =>
+      `<button class="chip" aria-pressed="${set.has(x)}" data-val="${esc(x)}">${esc(x)}</button>`).join('') + '</div>';
+  }
+  function next(label, to, green) {
+    return `<button class="btn ${green ? 'btn-green' : 'btn-ghost'}" data-go="${to}">${label}</button>`;
+  }
+
+  const screens = [
+    () => {
+      body.innerHTML = '<h4>What jobs are you open to?</h4><p class="hint">Pick as many as you want.</p>' +
+        Object.entries(titleGroups).map(([g, l]) => `<div class="grp">${esc(g)}</div>` + chips(l, state.titles)).join('');
+      foot.innerHTML = next(`Next (${state.titles.size} selected)`, 1, true);
+    },
+    () => {
+      const cities = ['Cincinnati, OH', 'Chicago, IL', 'Charlotte, NC', 'Detroit, MI', 'Charleston, SC'];
+      body.innerHTML = '<h4>Your must-haves</h4><p class="hint">Jobs that miss these are left out.</p>' +
+        `<div class="field"><label for="m-city">City</label><select id="m-city">${cities.map(c => `<option${c === state.city ? ' selected' : ''}>${c}</option>`).join('')}</select></div>` +
+        '<div class="lock"><span>Work type</span><b>In person</b></div><div class="lock"><span>Schedule</span><b>Full time</b></div>' +
+        `<div class="field"><label for="m-sal">Minimum salary</label><select id="m-sal">${['Any', '$45,000', '$50,000', '$55,000', '$60,000', '$70,000'].map(s => `<option${s === state.salary ? ' selected' : ''}>${s}</option>`).join('')}</select></div>` +
+        `<div class="field"><label for="m-exp">Max experience required: <span id="exp-out">${state.exp} year${state.exp === 1 ? '' : 's'}</span></label><input id="m-exp" type="range" min="0" max="1" step="1" value="${state.exp}"></div>`;
+      foot.innerHTML = next('Next', 2, true);
+      body.querySelector('#m-city').onchange = e => state.city = e.target.value;
+      body.querySelector('#m-sal').onchange = e => state.salary = e.target.value;
+      body.querySelector('#m-exp').oninput = e => {
+        state.exp = +e.target.value;
+        body.querySelector('#exp-out').textContent = state.exp + (state.exp === 1 ? ' year' : ' years');
+      };
+    },
+    () => {
+      body.innerHTML = '<h4>What do you want?</h4><p class="hint">Tap one or more answers for each question.</p>' +
+        Object.entries(questions).map(([q, l]) => `<div class="grp">${esc(q)}</div>` + chips(l, state.want)).join('');
+      foot.innerHTML = next('Find my jobs', 3, true);
+    },
+    () => {
+      body.innerHTML = '<h4>Your matches</h4><p class="hint">Best fit first. Tap a job for details.</p>' +
+        demoJobs.map((j, i) => `<button class="job" data-job="${i}">
+          <span class="jt">${esc(j.t)}</span><span class="jc">${esc(j.co)} · Cincinnati, OH</span>
+          <span class="tagrow"><span class="tag">Salary: ${esc(j.s)}</span><span class="tag${j.warn ? ' warn' : ''}">Exp: ${esc(j.e)}</span></span>
+          <span class="why"><b>Why it fits:</b> ${esc(j.why)}</span></button>`).join('');
+      foot.innerHTML = next('Edit search', 0, false);
+    },
+    () => {
+      const j = demoJobs[state.job];
+      body.innerHTML = `<div class="detail"><h4>${esc(j.t)}</h4><p class="hint">${esc(j.co)} · Cincinnati, OH · ${esc(j.src)}</p>
+        <dl><dt>Salary</dt><dd>${esc(j.s)}</dd><dt>Experience</dt><dd>${esc(j.e)}</dd><dt>About</dt><dd>${esc(j.desc)}</dd></dl>
+        <div class="grp">Matches your picks</div><ul class="match-list">${j.match.map(m => `<li>${esc(m)}</li>`).join('')}</ul></div>`;
+      foot.innerHTML = `<a class="btn btn-green" href="${j.u}" target="_blank" rel="noopener">Apply on original site ↗<span class="sr-only"> (opens in a new tab)</span></a>`;
+    }
+  ];
+
+  function go(n) {
+    current = n;
+    screens[n]();
+    body.scrollTop = 0;
+    stepLabel.textContent = `Step ${n + 1} of 5`;
+    progress.style.width = ((n + 1) * 20) + '%';
+    stepBtns.forEach((b, i) => b.setAttribute('aria-selected', i === n));
+  }
+
+  body.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (chip) {
+      const set = current === 0 ? state.titles : state.want;
+      const v = chip.dataset.val;
+      set.has(v) ? set.delete(v) : set.add(v);
+      chip.setAttribute('aria-pressed', set.has(v));
+      if (current === 0) foot.querySelector('.btn').textContent = `Next (${state.titles.size} selected)`;
+      return;
+    }
+    const job = e.target.closest('.job');
+    if (job) { state.job = +job.dataset.job; go(4); }
+  });
+  foot.addEventListener('click', e => {
+    const b = e.target.closest('[data-go]');
+    if (b) go(+b.dataset.go);
+  });
+  stepBtns.forEach(b => b.addEventListener('click', () => go(+b.dataset.step)));
+  stepBtns.forEach((b, i) => b.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const n = (i + (e.key === 'ArrowDown' ? 1 : 4)) % 5;
+      stepBtns[n].focus(); go(n);
+    }
+  }));
+  go(0);
+
+  /* ---------- city explorer (real listings from listings.csv) ---------- */
+  const cityData = {
+    'Cincinnati': { total: 19, jobs: [
+      ['Entry-Level Financial Analyst - Revenue', 'Medpace', 'Not stated', '0–1', 1, 'https://www.linkedin.com/jobs/view/entry-level-financial-analyst-revenue-at-medpace-4456062230'],
+      ['Marketing Associate - Marketing Technology & CRM', 'Medpace', 'Not stated', 'Not stated (internship/coursework)', null, 'https://www.linkedin.com/jobs/view/marketing-associate-marketing-technology-crm-at-medpace-4472578994'],
+      ['Associate Operations Analyst', 'Global Payments Inc.', 'Not stated', 'Not stated', null, 'https://www.linkedin.com/jobs/view/associate-operations-analyst-at-global-payments-inc-4487053427'],
+      ['Financial Analyst - Corporate FP&A', 'AtriCure, Inc.', 'Not stated', '2–3', 2, 'https://www.linkedin.com/jobs/view/financial-analyst-corporate-fp-a-at-atricure-inc-4458419844']
+    ]},
+    'Chicago': { total: 18, jobs: [
+      ['Business Analyst Associate', 'Medline', '$54,000–$81,000', 'None', 0, 'https://www.linkedin.com/jobs/view/business-analyst-associate-at-medline-4487489869'],
+      ['Research Analyst, Global Modeling Unit', 'Ipsos', '$55,000–$70,000 (est.)', 'Not stated', null, 'https://www.linkedin.com/jobs/view/research-analyst-global-modeling-unit-at-ipsos-in-us-4460541096'],
+      ['Associate, Events Marketing', 'KPMG US', 'Not stated', '1', 1, 'https://www.linkedin.com/jobs/view/associate-events-marketing-at-kpmg-us-4485737891'],
+      ['Analyst, Category Development', 'Mark Anthony Group', '$70,000–$80,000', 'Not stated (1+ preferred)', null, 'https://www.linkedin.com/jobs/view/analyst-category-development-at-mark-anthony-group-4485358884']
+    ]},
+    'Charlotte': { total: 18, jobs: [
+      ['Employee Benefits Associate Analyst', 'USI Insurance Services', '$60,000/year', 'Not stated', null, 'https://www.linkedin.com/jobs/view/employee-benefits-associate-analyst-january-2027-career-development-program-at-usi-insurance-services-4488196882'],
+      ['Operations Analyst - Sanctions Screening', 'Bank of America', 'Not stated', '1', 1, 'https://www.linkedin.com/jobs/view/operations-analyst-sanctions-screening-center-of-excellence-at-bank-of-america-4489625369'],
+      ['Fin Planning and Analysis Analyst', 'Coca-Cola Consolidated', 'Not stated', '1–3', 1, 'https://www.linkedin.com/jobs/view/fin-planning-and-analysis-analyst-at-coca-cola-consolidated-4486824126'],
+      ['Marketing Project Coordinator', 'Husqvarna Group', 'Not stated', '1+', 1, 'https://www.linkedin.com/jobs/view/marketing-project-coordinator-at-husqvarna-group-4476453705']
+    ]},
+    'Detroit': { total: 18, jobs: [
+      ['Marketing Coordinator - Go-To-Market', 'Plante Moran', 'Not stated for MI', '1 (internships count)', 1, 'https://www.linkedin.com/jobs/view/marketing-coordinator-go-to-market-at-plante-moran-4475703353'],
+      ['2027 Business Technology Advisory Consultant', 'Plante Moran', 'Not stated per year', 'Not stated', null, 'https://www.linkedin.com/jobs/view/2027-business-technology-advisory-entry-level-consultant-at-plante-moran-4469987247'],
+      ['Contract & Gas Management Analyst I', 'DT Midstream', 'Not stated', 'Not stated', null, 'https://www.linkedin.com/jobs/view/contract-gas-management-analyst-i-detroit-mi-at-dt-midstream-4469911139'],
+      ['Financial Analyst, International', 'Little Caesars Pizza', 'Not stated', '2 (minimum)', 2, 'https://www.linkedin.com/jobs/view/financial-analyst-international-at-little-caesars-pizza-4488409203']
+    ]},
+    'Charleston': { total: 18, jobs: [
+      ['FP&A Analyst', 'Greystar', 'Not stated', '1–2', 1, 'https://www.linkedin.com/jobs/view/fp-a-analyst-at-greystar-4484517077'],
+      ['Marketing Coordinator - ProGreen', 'PlayCore', 'Not stated', 'Not stated (preferred)', null, 'https://www.linkedin.com/jobs/view/marketing-coordinator-progreen-at-playcore-4481594055'],
+      ['Analyst I Business Process Transactions', 'DXC Technology', 'Not stated', 'Not stated (FINRA Series 6)', null, 'https://www.linkedin.com/jobs/view/analyst-i-business-process-transactions-at-dxc-technology-4486349168'],
+      ['Junior-Level Business Analyst', 'CGI', '$51,600–$110,100 (est.)', '3+', 3, 'https://www.linkedin.com/jobs/view/junior-level-business-analyst-at-cgi-4456447472']
+    ]}
+  };
+  const tabsEl = document.getElementById('city-tabs');
+  const listEl = document.getElementById('city-list');
+  const countEl = document.getElementById('city-count');
+  const filterEl = document.getElementById('exp-filter');
+  const msgEl = document.getElementById('filtered-msg');
+  let city = 'Cincinnati';
+
+  Object.keys(cityData).forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'city-tab'; b.role = 'tab'; b.textContent = c;
+    b.setAttribute('aria-selected', c === city);
+    b.setAttribute('aria-controls', 'city-panel');
+    b.onclick = () => { city = c; renderCity(); };
+    tabsEl.appendChild(b);
+  });
+
+  function renderCity() {
+    tabsEl.querySelectorAll('.city-tab').forEach(b => b.setAttribute('aria-selected', b.textContent === city));
+    const d = cityData[city];
+    countEl.textContent = `${d.total} listings collected in ${city} · 4 shown`;
+    let hidden = 0;
+    listEl.innerHTML = d.jobs.map(([t, co, s, e, min, u]) => {
+      const hide = filterEl.checked && min !== null && min > 1;
+      if (hide) hidden++;
+      const warn = min === null || min > 1;
+      return `<div class="listing${hide ? ' hidden' : ''}">
+        <div><div class="lt">${esc(t)}</div><div class="lc">${esc(co)} · Salary: ${esc(s)}</div>
+        <div class="tagrow"><span class="tag${warn ? ' warn' : ''}">Experience: ${esc(e)}</span></div></div>
+        <a href="${u}" target="_blank" rel="noopener">View posting ↗<span class="sr-only"> for ${esc(t)} (opens in a new tab)</span></a></div>`;
+    }).join('');
+    msgEl.hidden = hidden === 0;
+    msgEl.textContent = hidden ? `${hidden} "entry-level" job${hidden > 1 ? 's' : ''} asking for 2+ years ${hidden > 1 ? 'were' : 'was'} hidden. That's the TrueFit filter at work.` : '';
+  }
+  filterEl.addEventListener('change', renderCity);
+  renderCity();
+})();
+</script>
+</body>
+</html>
